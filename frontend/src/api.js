@@ -9,7 +9,6 @@ const apiClient = axios.create({
   },
 });
 
-// Function to set the JWT in the Authorization header
 export const setAuthToken = (token) => {
   if (token) {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -19,9 +18,17 @@ export const setAuthToken = (token) => {
 };
 
 // User Registration
-export const registerUser = async (token) => {
-  return await apiClient.post('/auth/oauth/register', { token });
+export const registerUser = async (userData) => {
+  try {
+    const response = await apiClient.post('/auth/oauth/register', userData);
+    return response;
+  } catch (error) {
+    console.error('Registration error:', error.response ? error.response.data : error.message);
+    alert('User already registered');
+  }
 };
+
+
 
 // User Login
 export const loginUser = async (username, password) => {
@@ -39,7 +46,6 @@ export const loginUser = async (username, password) => {
 // File Upload
 export const uploadFile = async (file, folderId) => {
   console.log(file)
-  console.log("CHILL KARDA")
   const formData = new FormData();
   formData.append('file', file);
   if (folderId) formData.append('folder_id', folderId);
@@ -49,18 +55,19 @@ export const uploadFile = async (file, folderId) => {
 }});
 };
 
-
-// Other API calls (download, list files, etc.) can be added similarly...// List Files (with optional parameters)
 export const listFiles = async () => {
     const response = await apiClient.get('/files');
     return response;
   };
   
   // Download File
-  export const downloadFile = async (fileId) => {
-    return await apiClient.get(`/files/download/${fileId}`, { responseType: 'blob' });
-  };
-  
+export const downloadFile = async (fileId) => {
+  const response = await apiClient.get(`/files/download/${fileId}`, {
+    responseType: 'blob',
+  });
+  return response;
+};
+
   // Create Folder
   export const createFolder = async (folderName, parentId) => {
     return await apiClient.post('/folders', { folder_name: folderName, parent_id: parentId });

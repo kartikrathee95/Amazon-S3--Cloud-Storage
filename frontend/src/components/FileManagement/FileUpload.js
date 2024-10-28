@@ -10,12 +10,14 @@ const FileUpload = ({ onUploadSuccess }) => {
         e.preventDefault();
         if (!file) {
             console.error('No file selected');
+            alert('Please select a file to upload')
             return;
         }
 
         try {
             await uploadFile(file, folderId ? folderId : null);
             console.log('File uploaded successfully');
+            alert('File uploaded successfully')
             onUploadSuccess(); // Call the function to refresh the file list
         } catch (error) {
             console.error('File upload failed:', error.response ? error.response.data : error);

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import FileUpload from './components/FileManagement/FileUpload';
+import FileDownload from './components/FileManagement/FileDownload'
 import FileList from './components/FileManagement/FileList';
 import UsageAnalytics from './components/Analytics/UsageAnalytics';
 import Home from './components/Home';
@@ -16,10 +17,11 @@ const App = () => {
         <Route path="/" element={<Home />} /> {/* Homepage */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/user" element={<UserPage />} />
         <Route path="/upload" element={<FileUpload />} />
+        <Route path = "/download" element={<FileDownload />} />
         <Route path="/files" element={<FileList />} />
         <Route path="/analytics" element={<UsageAnalytics />} />
-        <Route path="/user" element={<UserPage />} />
       </Routes>
     </Router>
   );

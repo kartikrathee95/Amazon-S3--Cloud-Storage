@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { listFiles, downloadFile, setAuthToken } from '../../api'; // Import downloadFile
+import { listFiles, setAuthToken } from '../../api'; // No need to import downloadFile here
+import FileDownload from './FileDownload';
 
 const FileList = () => {
   const [files, setFiles] = useState([]);
@@ -32,7 +33,7 @@ const FileList = () => {
           {files.map((file) => (
             <li key={file.file_id}>
               {file.filename}
-              <button onClick={() => downloadFile(file.file_id)}>Download</button>
+              <FileDownload fileId={file.file_id} /> {/* Pass fileId to FileDownload */}
             </li>
           ))}
         </ul>

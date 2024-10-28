@@ -1,36 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { downloadFile } from '../../api';
 
-const FileDownload = () => {
-  const [fileId, setFileId] = useState('');
-
+const FileDownload = ({ fileId }) => {
   const handleDownload = async () => {
+    if (!fileId) {
+      console.error('File ID is required');
+      return;
+    }
+
     try {
       const response = await downloadFile(fileId);
-      // Create a link to download the file
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `file_${fileId}`); // You can set the filename here
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+
+      console.log('Response Status:', response.status);
+      console.log('Response Headers:', response.headers);
+      
+      if (response.status === 200) {
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `file_${fileId}`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        alert("File downloaded successfully")
+      } else {
+        console.error('Failed to download file: Status', response.status);
+      }
     } catch (error) {
       console.error('File download failed:', error);
     }
   };
 
   return (
-    <div>
-      <h2>Download File</h2>
-      <input 
-        type="text" 
-        value={fileId} 
-        onChange={(e) => setFileId(e.target.value)} 
-        placeholder="File ID" 
-      />
-      <button onClick={handleDownload}>Download</button>
-    </div>
+    <button onClick={handleDownload}>Download</button>
   );
 };
 
