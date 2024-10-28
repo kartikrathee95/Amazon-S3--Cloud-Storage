@@ -28,7 +28,6 @@ const UserPage = () => {
     return (
         <div>
             <h1>Your Files</h1>
-            <FileUpload onUploadSuccess={fetchFiles} /> {/* Refresh files after upload */}
             <FileList files={files} />
         </div>
     );

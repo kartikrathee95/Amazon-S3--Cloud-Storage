@@ -1,10 +1,14 @@
 // src/components/FileManagement/FileUpload.js
 import React, { useState } from 'react';
-import { uploadFile } from '../../api';
+import { uploadFile, setAuthToken } from '../../api';
 
 const FileUpload = ({ onUploadSuccess }) => {
     const [file, setFile] = useState(null);
     const [folderId, setFolderId] = useState('');
+    const token = localStorage.getItem('token');
+    if (token) {
+      setAuthToken(token);
+    }
 
     const handleUpload = async (e) => {
         e.preventDefault();
