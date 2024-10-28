@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -21,6 +22,17 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 TOKEN_URL = "/S3/auth/oauth/login"
 app = FastAPI()
+origins = [
+    "http://localhost:3000",  # frontend URL
+    "http://localhost:8000",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST)
+    allow_headers=["*"],
+)
 
 # OAuth2 scheme for password flow
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
@@ -43,6 +55,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
+    print(token)
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -71,28 +84,29 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 @app.post("/S3/auth/oauth/register", response_model=Token)
 async def register(user: UserCreate):
-    db = SessionLocal()
-    db_user = db.query(DBUser).filter(DBUser.username == user.username).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+    try:
+        db = SessionLocal()
+        db_user = db.query(DBUser).filter(DBUser.username == user.username).first()
+        if db_user: raise HTTPException(status_code=400, detail="Username already registered")
     
-    db_user = DBUser(
-        email=user.email,
-        username=user.username,
-        password_hash=get_password_hash(user.password)
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+        db_user = DBUser(
+	    email=user.email,
+	    username=user.username,
+	    password_hash=get_password_hash(user.password)
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
 
-    access_token = create_access_token(data={"sub": db_user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+        access_token = create_access_token(data={"sub": db_user.username})
+        return {"access_token": access_token, "token_type": "bearer"}
+    except (Exception, HTTPException) as exception:
+        return JSONResponse(status_code=400, content = {"Error":str(exception)})
 
 @app.post(TOKEN_URL, response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     db = SessionLocal()
     db_user = db.query(DBUser).filter(DBUser.username == form_data.username).first()
-    
     if not db_user or not verify_password(form_data.password, db_user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     
@@ -134,7 +148,8 @@ async def download_file(file_id: int, current_user: DBUser = Depends(get_current
         raise HTTPException(status_code=404, detail="File not found")
 
     file_location = f"files/{file_record.file_name}"
-    return FileResponse(path=file_location, media_type=file_record.file_type, filename=file_record.file_name)
+    return FileResponse(path=file_location, media_type=file_record.file_type, filename=file_record.file_name, headers={"Content-Disposition": f"attachment; filename={file_record.file_name}"})
+
 
 @app.get("/S3/files")
 async def list_files(current_user: DBUser = Depends(get_current_user)):
