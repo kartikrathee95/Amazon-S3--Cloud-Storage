@@ -17,6 +17,7 @@ const Login = ({ onSwitch }) => {
           localStorage.setItem('token', response.data.access_token);
           navigate('/user');
       } catch (error) {
+          alert("Login failed",error);
           console.error("Login failed:", error);
       }
   };
