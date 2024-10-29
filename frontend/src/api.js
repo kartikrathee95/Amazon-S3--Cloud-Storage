@@ -17,15 +17,27 @@ export const setAuthToken = (token) => {
   }
 };
 
-// User Registration
-export const registerUser = async (userData) => {
+// Register User
+
+export const registerUser = async (params) => {
   try {
-    const response = await apiClient.post('/auth/oauth/register', userData);
-    return response;
+    const response = await apiClient.post('/auth/oauth/register', params, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.data;
   } catch (error) {
     console.error('Registration error:', error.response ? error.response.data : error.message);
-    alert('User already registered');
+    throw new Error(error.response?.data?.Error || 'Registration failed. Please try again.'); // Throw error for handling in Register.js
   }
+};
+
+// Logout function
+export const logoutUser = () => {
+  localStorage.removeItem('access_token');
+  window.location.href = '/login'; // Redirect to login
 };
 
 
@@ -88,9 +100,6 @@ export const downloadFile = async (fileId) => {
   };
 
   export const shareFile = async (fileId, shareDetails) => {
-    console.log(fileId);
-    console.log("jwere");
-    console.log(shareDetails);
     return await axios.post(`http://localhost:8000/S3/share_file/${fileId}`, shareDetails
     );
 };
