@@ -86,3 +86,11 @@ export const downloadFile = async (fileId) => {
   export const getUsageAnalytics = async () => {
     return await apiClient.get('/Analytics');
   };
+
+  export const shareFile = async (fileId, shareDetails) => {
+    console.log(fileId);
+    console.log("jwere");
+    console.log(shareDetails);
+    return await axios.post(`http://localhost:8000/S3/share_file/${fileId}`, shareDetails
+    );
+};
