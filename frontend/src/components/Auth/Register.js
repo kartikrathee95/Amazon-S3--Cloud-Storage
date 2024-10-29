@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser, setAuthToken } from '../../api';
+import './Register.css'; // Import the CSS file for styling
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -12,7 +13,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await registerUser({username, email, password} );
+      const response = await registerUser({ username, email, password });
       if (response) {
         setAuthToken(response.jwt);
         localStorage.setItem('token', response.access_token);
@@ -25,9 +26,9 @@ const Register = () => {
   };
 
   return (
-    <div>
+    <div className="register-container">
       <h2>Register</h2>
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} {/* Display error message */}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
       <form onSubmit={handleRegister}>
         <input 
           type="text" 
@@ -35,6 +36,7 @@ const Register = () => {
           onChange={(e) => setUsername(e.target.value)} 
           placeholder="Username" 
           required 
+          className="input-box"
         />
         <input 
           type="email" 
@@ -42,6 +44,7 @@ const Register = () => {
           onChange={(e) => setEmail(e.target.value)} 
           placeholder="Email" 
           required 
+          className="input-box"
         />
         <input 
           type="password" 
@@ -49,8 +52,9 @@ const Register = () => {
           onChange={(e) => setPassword(e.target.value)} 
           placeholder="Password" 
           required 
+          className="input-box"
         />
-        <button type="submit">Register</button>
+        <button type="submit" className="submit-button">Register</button>
       </form>
     </div>
   );
