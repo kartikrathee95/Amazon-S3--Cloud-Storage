@@ -10,6 +10,10 @@ const FileList = () => {
 
   // Function to fetch files from the API
   const fetchFiles = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setAuthToken(token); // Set the token for API requests
+    }
     try {
       const response = await listFiles();
       setFiles(response.data);
@@ -29,10 +33,18 @@ const FileList = () => {
 
   // This function will be called after a successful upload
   const handleUploadSuccess = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setAuthToken(token); // Set the token for API requests
+    }
     fetchFiles(); // Refresh the file list after upload
   };
 
   const handleShare = async (fileId) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setAuthToken(token); // Set the token for API requests
+    }
     if (!shareUsername) {
       alert('Please enter a username or email to share with.');
       return;
@@ -42,7 +54,7 @@ const FileList = () => {
       await shareFile(fileId, { user_id: shareUsername });
       alert('File shared successfully!');
       setShareUsername(''); // Clear the input
-      setSharingFileId(null); // Close the share dropdown
+      setSharingFileId(null);
       fetchFiles(); // Refresh file list after sharing
     } catch (error) {
       console.error('Error sharing file:', error);
