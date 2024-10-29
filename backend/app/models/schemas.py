@@ -91,8 +91,7 @@ class Metadata(BaseModel):
         orm_mode = True
 
 class PermissionCreate(BaseModel):
-    user_id: int
-    file_id: Optional[int] = None
+    user_id: str 
     folder_id: Optional[int] = None
     access_type: AccessType
 
