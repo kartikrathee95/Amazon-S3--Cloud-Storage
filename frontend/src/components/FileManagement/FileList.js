@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listFiles, setAuthToken, shareFile } from '../../api';
+import { listFiles, setAuthToken, shareFile } from '../../api'; // Import shareFile function
 import FileDownload from './FileDownload';
 import FileUpload from './FileUpload';
 
@@ -39,7 +39,7 @@ const FileList = () => {
     }
 
     try {
-      await shareFile(fileId, { user_id: shareUsername, access_type: "shared" });
+      await shareFile(fileId, { user_id: shareUsername });
       alert('File shared successfully!');
       setShareUsername(''); // Clear the input
       setSharingFileId(null); // Close the share dropdown
