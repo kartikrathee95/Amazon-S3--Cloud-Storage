@@ -9,8 +9,8 @@ import shutil
 import os
 import secrets
 from passlib.context import CryptContext
-from app.models.models import Base, User as DBUser, File as DBFile
-from app.models.schemas import UserCreate, User, Token
+from app.models.models import Base, User as DBUser, File as DBFile, Permission
+from app.models.schemas import PermissionCreate, UserCreate, User, Token, AccessType
 from app.utils.connection import SessionLocal
 
 
@@ -141,22 +141,53 @@ async def upload_file(file: UploadFile = File(...), current_user: DBUser = Depen
 @app.get("/S3/files/download/{file_id}")
 async def download_file(file_id: int, current_user: DBUser = Depends(get_current_user)):
     db = SessionLocal()
-    print(current_user.id, file_id)
+    
+    # Check if the file is owned by the current user
     file_record = db.query(DBFile).filter(DBFile.id == file_id, DBFile.user_id == current_user.id).first()
-    print(file_record)
+
+    # If not found, check if the file is shared with the current user
+    if file_record is None:
+        file_record = (
+            db.query(DBFile)
+            .join(Permission)
+            .filter(DBFile.id == file_id, Permission.user_id == current_user.id)
+            .first()
+        )
+
     if file_record is None:
         raise HTTPException(status_code=404, detail="File not found")
 
     file_location = f"files/{file_record.file_name}"
-    return FileResponse(path=file_location, media_type=file_record.file_type, filename=file_record.file_name, headers={"Content-Disposition": f"attachment; filename={file_record.file_name}"})
+    return FileResponse(
+        path=file_location,
+        media_type=file_record.file_type,
+        filename=file_record.file_name,
+        headers={"Content-Disposition": f"attachment; filename={file_record.file_name}"}
+    )
 
 
 @app.get("/S3/files")
 async def list_files(current_user: DBUser = Depends(get_current_user)):
     db = SessionLocal()
-    files = db.query(DBFile).filter(DBFile.user_id == current_user.id).all()
-    
-    return [{"file_id": file.id, "filename": file.file_name} for file in files]
+
+    # Fetch files owned by the current user
+    owned_files = db.query(DBFile).filter(DBFile.user_id == current_user.id).all()
+
+    # Fetch files shared with the current user
+    shared_files = (
+        db.query(DBFile)
+        .join(Permission)
+        .filter(Permission.user_id == current_user.id)
+        .all()
+    )
+
+    all_files = owned_files + shared_files
+
+    # Return a unique list of files, avoiding duplicates
+    unique_files = {file.id: file for file in all_files}.values()
+
+    return [{"file_id": file.id, "filename": file.file_name} for file in unique_files]
+
 
 @app.delete("/S3/files/{file_id}")
 async def delete_file(file_id: int, current_user: DBUser = Depends(get_current_user)):
@@ -170,3 +201,27 @@ async def delete_file(file_id: int, current_user: DBUser = Depends(get_current_u
     db.commit()
 
     return {"detail": "File deleted"}
+
+
+@app.post("/S3/share_file/{file_id}")
+def share_file(file_id: int, share_request: PermissionCreate):
+    db = SessionLocal()
+    
+    user = db.query(DBUser).filter(DBUser.username == share_request.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    file = db.query(DBFile).filter(DBFile.id == file_id).first()
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Create the permission instance correctly
+    permission = Permission(
+        user_id=user.id,
+        file_id=file.id,
+        access_type="shared"
+    )
+    
+    db.add(permission)
+    db.commit()
+    return {"message": "File shared successfully"}
